@@ -1,6 +1,7 @@
 """Backtester: moving-average crossover vs buy-and-hold."""
 
 import pandas as pd
+import matplotlib.pyplot as plt
 from data import fetch_close_prices
 from metrics import simple_returns, sharpe_ratio, max_drawdown
 
@@ -50,3 +51,12 @@ print(f"Max drawdown: {strategy_drawdown:.2%}")
 print(f"Buy-and-hold return: {bh_return:.2%}")
 print(f"Buy-and-hold Sharpe ratio: {bh_sharpe:.2f}")
 print(f"Buy-and-hold Max drawdown: {bh_drawdown:.2%}")
+
+# plot equity curves
+plt.plot(strategy_equity, label="Strategy Equity")
+plt.plot(buy_and_hold_equity, label="Buy-and-Hold Equity")
+plt.title(f"{ticker} Moving Average Crossover vs Buy-and-Hold")
+plt.xlabel("Trading Days Since Start")
+plt.ylabel("Value of $1")
+plt.legend()
+plt.savefig("equity_curve.png")
