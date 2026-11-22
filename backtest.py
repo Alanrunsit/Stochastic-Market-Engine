@@ -8,7 +8,7 @@ from metrics import simple_returns, sharpe_ratio, max_drawdown
 ticker = "SPY"
 short_window = 50
 long_window = 200
-cost_rate= 0.001  # 5 bps per trade
+cost_rate = 0.001  # 10 bps per trade
 
 # load data
 close_prices = fetch_close_prices(ticker, period="5y")
@@ -31,10 +31,10 @@ trades = aligned_position.diff().fillna(0).abs()
 cost = trades * cost_rate
 net_strategy_returns = strategy_returns - cost
 
-# trade
+# equity curves and strategy metrics
 strategy_equity = (1 + net_strategy_returns).cumprod()
 buy_and_hold_equity = (1 + returns).cumprod()
-total_return = strategy_equity.iloc[-1] - 1
+strategy_return = strategy_equity.iloc[-1] - 1
 strategy_sharpe = sharpe_ratio(net_strategy_returns)
 strategy_drawdown = max_drawdown(strategy_equity)
 
@@ -43,8 +43,6 @@ bh_return = buy_and_hold_equity[-1] - 1
 bh_sharpe = sharpe_ratio(returns)
 bh_drawdown = max_drawdown(buy_and_hold_equity)
 
-print(strategy_equity.iloc[-1])
-print(buy_and_hold_equity[-1])
 print(f"Total return: {total_return:.2%}")
 print(f"Sharpe ratio: {strategy_sharpe:.2f}")
 print(f"Max drawdown: {strategy_drawdown:.2%}")
