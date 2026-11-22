@@ -55,6 +55,84 @@ Menu:
 3. Compare two risk levels side-by-side
 4. Quit
 
+## Backtest: moving-average crossover vs buy-and-hold
+
+`backtest.py` tests a simple trend-following strategy on real data and compares
+it to buying SPY and holding it.
+
+**Strategy.** Hold SPY when its 50-day moving average is above its 200-day
+moving average, otherwise hold cash (cash earns 0%). The signal is computed from
+each day's close and traded the next day, so the strategy never uses
+information it could not have had. Every change in position costs 10 basis
+points (0.1%).
+
+**Data.** Five years of daily adjusted SPY closes from `yfinance`. The first 199
+days have no 200-day average, so the strategy stays in cash until one exists
+and the 50-day average crosses above it.
+
+```bash
+python backtest.py
+```
+
+This prints the metrics below and saves the chart to `equity_curve.png`.
+
+![SPY moving-average crossover vs buy-and-hold](equity_curve.png)
+
+### Results
+
+| Strategy                              | Total return | Sharpe ratio | Max drawdown |
+| ------------------------------------- | -----------: | -----------: | -----------: |
+| 50/200-day moving-average crossover   |       51.84% |         0.72 |      -18.76% |
+| Buy-and-hold SPY                      |       57.74% |         0.61 |      -24.50% |
+
+*SPY, five-year window as of 22 Nov 2026, 10 bps per trade, risk-free rate 0.*
+
+Buy-and-hold earned more in total, but the crossover strategy had the higher
+Sharpe ratio and the shallower worst drop. It spent the early part of the window
+in cash, which let it avoid a large drawdown, and it was late to get back in
+after the April 2025 sell-off, which is where buy-and-hold caught up.
+
+### Limitations
+
+- **One stock, one parameter pair.** Only SPY and a 50/200-day crossover were
+  tested, so the result may not generalize to other stocks or market regimes.
+- **Very few trades.** The run produced only three trades, which is too few to
+  conclude that the strategy has an edge. The Sharpe gap could easily be luck.
+- **Moving data window.** The five-year window is measured back from today, so
+  results shift slightly over time. A fixed start and end date is planned.
+- **Simplified costs.** Costs are a flat 10 bps per trade, with no slippage or
+  bid-ask spread, and the results exclude dividends and taxes.
+
+### What I learned
+
+**Python**
+
+- `rolling(n).mean()` builds moving averages, and the first `n - 1` values are
+  `NaN` because the window is not full yet.
+- `shift(1)` moves a series down one row, so each day's position is the
+  previous day's signal.
+- `(1 + returns).cumprod()` compounds daily returns into an equity curve, the
+  value of $1 over time.
+- Functions return values, but storing the result under the function's own
+  name (`sharpe_ratio = sharpe_ratio(...)`) overwrites the function. This is
+  called name shadowing, and it breaks the second call.
+
+**Concepts**
+
+- **Lookahead bias.** A signal built from day `t`'s close cannot be traded until
+  day `t + 1`. Multiplying it by day `t`'s return credits the strategy with a
+  move that caused the signal, which makes a backtest look better than reality.
+- **Trading costs.** Costs apply only when the position changes. They barely
+  matter with three trades, but a fast 5/20-day version made 70 trades and paid
+  about 7% in fees.
+- **Risk-adjusted performance.** A higher return is not automatically better.
+  Sharpe ratio and max drawdown show how much risk was taken to earn it.
+
+### Planned next
+
+Train/test split to check for overfitting, strategies as interchangeable
+functions, tests for the backtest, and a command-line interface.
+
 ## Tests
 
 ```bash
@@ -67,6 +145,7 @@ pytest
 data.py         real-data fetch + GBM calibration
 engine.py       vectorized GBM Monte Carlo simulation
 metrics.py      Sharpe ratio, max drawdown, returns
+backtest.py     moving-average crossover vs buy-and-hold backtest
 visualizer.py   fan charts and the real-history overlay
 main.py         CLI: analytics mode + learning demo
 tests/          unit tests for the metrics and calibration
