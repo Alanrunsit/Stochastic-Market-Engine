@@ -43,7 +43,7 @@ bh_return = buy_and_hold_equity[-1] - 1
 bh_sharpe = sharpe_ratio(returns)
 bh_drawdown = max_drawdown(buy_and_hold_equity)
 
-print(f"Total return: {total_return:.2%}")
+print(f"Total return: {strategy_return:.2%}")
 print(f"Sharpe ratio: {strategy_sharpe:.2f}")
 print(f"Max drawdown: {strategy_drawdown:.2%}")
 
